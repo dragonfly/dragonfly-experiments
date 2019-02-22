@@ -91,6 +91,9 @@ METHODS = ['dragonfly']
 # METHODS = ['rand', 'ga', 'dragonfly-mf', 'dragonfly']
 # METHODS = ['bo', 'bo_ga-direct', 'rand', 'ga']
 
+out_dir = './real_results'
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
 def get_evaluation_tmp_dir(study_name):
   """ Gets the tmp dir. """
