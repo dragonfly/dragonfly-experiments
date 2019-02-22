@@ -6,14 +6,15 @@
 
 #pylint: disable=no-member
 
-import os
 from argparse import Namespace
 from time import time, clock
-
+import os
 # Local
-from dragonfly.opt.gp_bandit import get_all_gp_bandit_args, euclidean_specific_gp_bandit_args
+from dragonfly.opt.gp_bandit import get_all_euc_gp_bandit_args, get_all_mf_euc_gp_bandit_args
+from dragonfly.opt.blackbox_optimiser import blackbox_opt_args
 from dragonfly.gp.euclidean_gp import euclidean_gp_args
 from euc_opt_method_evaluator import EucOptMethodEvaluator
+from lrg_func_caller import LRGOptFunctionCaller
 from dragonfly.utils.euclidean_synthetic_functions import get_syn_func_caller, get_syn_function
 from dragonfly.utils.option_handler import load_options
 from dragonfly.utils.reporters import get_reporter
@@ -31,14 +32,34 @@ IS_DEBUG = False
 # NOISY_EVALS = True
 NOISY_EVALS = False
 
-NUM_TRIALS = 20
+NUM_TRIALS = 10
 
-# STUDY_NAME = 'hartmann3'
-# STUDY_NAME = 'hartmann6'
 # STUDY_NAME = 'branin'
-# STUDY_NAME = 'borehole'
+# STUDY_NAME = 'borehole'; NUM_TRIALS = 10;
+# STUDY_NAME = 'borehole';
+# STUDY_NAME = 'hartmann3'
+# STUDY_NAME = 'park1'; NUM_TRIALS = 10;
+STUDY_NAME = 'park2'; NUM_TRIALS = 10;
+# STUDY_NAME = 'hartmann6'; NUM_TRIALS = 10;
+# STUDY_NAME = 'hartmann6';
+# STUDY_NAME = 'park2-20'
+# STUDY_NAME = 'hartmann3-18'
+# STUDY_NAME = 'hartmann6-18'
+# STUDY_NAME = 'branin-14'; NUM_TRIALS = 10;
+# STUDY_NAME = 'hartmann6-42'; NUM_TRIALS = 10;
+# STUDY_NAME = 'branin-50'; NUM_TRIALS = 10;
+# STUDY_NAME = 'borehole-20'
+# STUDY_NAME = 'borehole-20'
+# STUDY_NAME = 'borehole-32'; NUM_TRIALS = 10;
 # STUDY_NAME = 'currin_exp'
-STUDY_NAME = 'park2'
+# STUDY_NAME = 'park2-24'
+# STUDY_NAME = 'park2-40'
+# STUDY_NAME = 'park2-24'
+# STUDY_NAME = 'borehole-96'
+# STUDY_NAME = 'park1-108'
+
+# STUDY_NAME = 'lrg'
+
 
 # We won't be changing these much.
 NUM_WORKERS = 1
@@ -46,10 +67,27 @@ MAX_CAPITAL = 200
 TIME_DISTRO = 'const'
 SAVE_RESULTS_DIR = 'results'
 
-#METHODS = ['smac']
-#METHODS = ['spearmint']
-#METHODS = ['rand', 'pdoo', 'gpyopt', 'hyperopt', 'dragonfly']
+# METHODS = ['spearmint']
+# METHODS = ['spearmint']; MAX_CAPITAL = 20;
+# METHODS = ['smac']
+# METHODS = ['rand', 'pdoo', 'hyperopt', 'gpyopt', 'dragonfly']
 METHODS = ['rand', 'dragonfly']
+
+# METHODS = ['rand', 'hyperopt', 'gpyopt', 'dragonfly']
+# METHODS = ['rand', 'pdoo', 'gpyopt', 'hyperopt', 'ensemble-dfl', 'adaptive-ensemble-dfl']
+# METHODS = ['hyperopt', 'rand', 'pdoo', 'gpyopt', 'dragonfly', 'dragonfly-mf-se',
+#            'dragonfly-mf-exp']
+# METHODS = ['dragonfly-mf-se', 'dragonfly-mf-exp']
+
+
+# STUDY_NAME = 'branin-40'
+# METHODS = ['rand', 'ml', 'post_sampling', 'ml+post_sampling']; MAX_CAPITAL = 100;
+
+# STUDY_NAME = 'hartmann6'
+# STUDY_NAME = 'park1-12'
+# STUDY_NAME = 'branin-40'
+# STUDY_NAME = 'hartmann-20'
+# METHODS = ['rand', 'pi', 'ts',  'ei', 'ttei', 'ucb', 'add_ucb', 'dragonfly']; MAX_CAPITAL = 100;
 
 out_dir = './results'
 if not os.path.exists(out_dir):
@@ -63,7 +101,7 @@ def get_prob_params():
 
   if IS_DEBUG:
     prob.num_trials = 3
-    prob.max_capital = 10 
+    prob.max_capital = 10
   else:
     prob.num_trials = NUM_TRIALS
     prob.max_capital = MAX_CAPITAL
@@ -78,6 +116,7 @@ def get_prob_params():
                    'borehole': (5.0, 40, 1),
                    'park1': (0.2, 30, None),
                    'park2': (0.1, 30, None),
+                   'lrg': (0, 0, None),
                   }
   _fc_noise_scale, _initial_pool_size, _fidel_dim = _study_params[study_name]
   _initial_pool_size = 0
@@ -92,11 +131,16 @@ def get_prob_params():
     noise_scale = None
 
   # Create the function caller and worker manager
-  prob.func_caller = get_syn_func_caller(STUDY_NAME, noise_type=noise_type,
-                                         noise_scale=noise_scale, fidel_dim=_fidel_dim)
-  _, func, prob.opt_pt, prob.opt_val, _, _, domain_bounds = \
+  if prob.study_name == 'lrg':
+    prob.func_caller = LRGOptFunctionCaller('./lrg_sim')
+    prob.opt_val = None
+  else:
+    prob.func_caller = get_syn_func_caller(STUDY_NAME, noise_type=noise_type,
+                                           noise_scale=noise_scale, fidel_dim=_fidel_dim)
+    _, _, _, prob.opt_val, _, _, _ = \
               get_syn_function(STUDY_NAME, noise_type=noise_type, noise_scale=noise_scale)
-  prob.func = lambda x: -1 * func(x) 
+#   prob.func_to_min = lambda x: -1 * func_to_max(x)
+#   prob.func_to_max = func_to_max
   prob.worker_manager = SyntheticWorkerManager(prob.num_workers,
                                                time_distro='caller_eval_cost')
   prob.save_file_prefix = prob.study_name + ('-debug' if IS_DEBUG else '')
@@ -114,23 +158,37 @@ def get_method_options(prob, capital_type):
   """ Returns a dictionary of method options. """
   methods = prob.methods
   all_method_options = {}
-  euc_gpb_args = get_all_gp_bandit_args(euclidean_gp_args + 
-                                        euclidean_specific_gp_bandit_args)
   for meth in methods:
-    curr_options = load_options(euc_gpb_args)
     # wrap up
-    curr_options.capital_type = capital_type
+    curr_options = load_options(blackbox_opt_args)
     if meth in ['hyperopt', 'smac', 'gpyopt', 'pdoo']:
-      curr_options.func = prob.func
-    if meth == 'hyperopt':
-      curr_options.algo = tpe.suggest
-      curr_options.space = hp.uniform
-    if meth == 'spearmint':
-      curr_options.exp_dir = '/home/karun/boss/e1_euc/Spearmint/' + \
-                             prob.study_name.split('-')[0]
-      curr_options.pkg_dir = '/home/karun/Spearmint/spearmint'  
+#       curr_options.func_to_max = prob.func_to_max
+#       curr_options.func_to_min = prob.func_to_min
+      curr_options.redo_evals_for_true_val = True
+      if meth == 'hyperopt':
+        curr_options.algo = tpe.suggest
+        curr_options.space = hp.uniform
+    elif meth == 'spearmint':
+      e1_file_path = os.path.dirname(os.path.realpath(__file__))
+      curr_options.redo_evals_for_true_val = True
+      curr_options.noisy = NOISY_EVALS
+      curr_options.exp_dir = os.path.join(e1_file_path,
+                                          'Spearmint/' + prob.study_name.split('-')[0])
+      print(curr_options.exp_dir)
+      curr_options.pkg_dir = '/zfsauton3/home/kkandasa/projects/Boss/Spearmint/spearmint'
+    elif meth.startswith('dragonfly-mf'):
+      euc_mf_gpb_args = get_all_mf_euc_gp_bandit_args()
+      curr_options = load_options(euc_mf_gpb_args)
+    elif meth == 'dragonfly':
+      euc_gpb_args = get_all_euc_gp_bandit_args()
+      curr_options = load_options(euc_gpb_args)
+    else:
+      # Assuming its one of ml, ml+post_sampling etc.
+      euc_gpb_args = get_all_euc_gp_bandit_args()
+      curr_options = load_options(euc_gpb_args)
+    curr_options.capital_type = capital_type
+    # Add to all_method_options
     all_method_options[meth] = curr_options
-
   return all_method_options
 
 

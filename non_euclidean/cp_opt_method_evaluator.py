@@ -24,7 +24,7 @@ from dragonfly.opt.random_optimiser import random_optimiser_from_func_caller
 from dragonfly.opt.cp_ga_optimiser import cp_ga_optimiser_from_proc_args
 from dragonfly.opt.gp_bandit import gpb_from_func_caller
 from dragonfly.utils.general_utils import flatten_list_of_lists
-from euc_opt_method_evaluator import \
+from euclidean.euc_opt_method_evaluator import \
   common_final_operations_for_all_external_packages
 # Other packages
 
