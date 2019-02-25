@@ -16,17 +16,16 @@ import json
 from argparse import Namespace
 from collections import OrderedDict
 import numpy as np
-
-# Local imports
+# Dragonfly imports
 from dragonfly.opt.opt_method_evaluator import OptMethodEvaluator
 from dragonfly.exd.exd_utils import get_cp_domain_initial_qinfos
 from dragonfly.opt.random_optimiser import random_optimiser_from_func_caller
 from dragonfly.opt.cp_ga_optimiser import cp_ga_optimiser_from_proc_args
 from dragonfly.opt.gp_bandit import gpb_from_func_caller
 from dragonfly.utils.general_utils import flatten_list_of_lists
+# Local imports 
 from euclidean.euc_opt_method_evaluator import \
-  common_final_operations_for_all_external_packages
-# Other packages
+     common_final_operations_for_all_external_packages
 
 
 class CPOptMethodEvaluator(OptMethodEvaluator):
@@ -70,7 +69,8 @@ class CPOptMethodEvaluator(OptMethodEvaluator):
     elif method.startswith('smac'):
       history = self._optimise_with_smac(func_caller, max_capital, meth_options)
     elif method.startswith('spearmint'):
-      history = self._optimise_with_spearmint(func_caller, max_capital, meth_options, self.study_name)
+      history = self._optimise_with_spearmint(func_caller, max_capital, meth_options,
+                                              self.study_name)
     else:
       raise ValueError('Unknown method %s.'%(method))
     return history
@@ -83,7 +83,7 @@ class CPOptMethodEvaluator(OptMethodEvaluator):
       from smac.facade.smac_facade import SMAC
       from smac.scenario.scenario import Scenario
     except ImportError:
-      raise ImportError('smac package is not installed')
+      raise ImportError('SMAC package is not installed')
     # Determine max_iter
     if hasattr(func_caller, 'fidel_cost_func'):
       max_num_evals = int(max_capital /
@@ -341,7 +341,6 @@ class CPOptMethodEvaluator(OptMethodEvaluator):
     return history
 
 
-
 # Common Utils -----------------------------------------------------------------------
 def _get_var_label_with_counter(_counter):
   """ Returns label. """
@@ -396,7 +395,6 @@ def _convert_alphabetical_dict_repr_to_cp_domain_repr(x, num_dims_per_domain,
          _convert_indices_to_objects_for_disc_domains(points, disc_spaces),
          num_dims_per_domain, cp_dom_types)
   return ret
-
 
 
 class DiscItemsToIndexConverter(object):
@@ -577,3 +575,4 @@ def _read_spearmint_query_file(file_name):
       pass
   file_handle.close()
   return point, value, true_value
+

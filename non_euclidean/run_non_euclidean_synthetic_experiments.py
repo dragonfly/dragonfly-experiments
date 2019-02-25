@@ -11,83 +11,69 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from argparse import Namespace
 from time import time, clock
 
-# Local demo functions
-from demos_synthetic.borehole_6.borehole_6_mf import borehole_6_mf
-from demos_synthetic.borehole_6.borehole_6_mf import cost as cost_borehole_6_mf
-from demos_synthetic.branin.branin_mf import branin_mf
-from demos_synthetic.branin.branin_mf import cost as cost_branin_mf
-from demos_synthetic.hartmann3_2.hartmann3_2_mf import hartmann3_2_mf
-from demos_synthetic.hartmann3_2.hartmann3_2_mf import cost as cost_hartmann3_2_mf
-from demos_synthetic.hartmann6_4.hartmann6_4_mf import hartmann6_4_mf
-from demos_synthetic.hartmann6_4.hartmann6_4_mf import cost as cost_hartmann6_4_mf
-from demos_synthetic.park2_4.park2_4_mf import park2_4_mf
-from demos_synthetic.park2_4.park2_4_mf import cost as cost_park2_4_mf
-from demos_synthetic.park2_3.park2_3_mf import park2_3_mf
-from demos_synthetic.park2_3.park2_3_mf import cost as cost_park2_3_mf
-from demos_synthetic.park1_3.park1_3_mf import park1_3_mf
-from demos_synthetic.park1_3.park1_3_mf import cost as cost_park1_3_mf
-
-# Local
-from cp_opt_method_evaluator import CPOptMethodEvaluator
+# Dragonfly imports
 from dragonfly.exd.cp_domain_utils import load_config_file
 from dragonfly.exd.experiment_caller import get_multifunction_caller_from_config
 from dragonfly.exd.worker_manager import SyntheticWorkerManager
 from dragonfly.opt.blackbox_optimiser import blackbox_opt_args
 from dragonfly.opt.cp_ga_optimiser import cpga_opt_args
-from dragonfly.opt.gp_bandit import get_all_cp_gp_bandit_args, get_all_mf_cp_gp_bandit_args
+from dragonfly.opt.gp_bandit import get_all_cp_gp_bandit_args, \
+                                    get_all_mf_cp_gp_bandit_args
 from dragonfly.opt.random_optimiser import cp_random_optimiser_args
 from dragonfly.utils.option_handler import load_options
 from dragonfly.utils.reporters import get_reporter
-
+# Examples from dragonfly/examples
+from synthetic.borehole_6.borehole_6_mf import borehole_6_mf
+from synthetic.borehole_6.borehole_6_mf import cost as cost_borehole_6_mf
+from synthetic.branin.branin_mf import branin_mf
+from synthetic.branin.branin_mf import cost as cost_branin_mf
+from synthetic.hartmann3_2.hartmann3_2_mf import hartmann3_2_mf
+from synthetic.hartmann3_2.hartmann3_2_mf import cost as cost_hartmann3_2_mf
+from synthetic.hartmann6_4.hartmann6_4_mf import hartmann6_4_mf
+from synthetic.hartmann6_4.hartmann6_4_mf import cost as cost_hartmann6_4_mf
+from synthetic.park2_4.park2_4_mf import park2_4_mf
+from synthetic.park2_4.park2_4_mf import cost as cost_park2_4_mf
+from synthetic.park2_3.park2_3_mf import park2_3_mf
+from synthetic.park2_3.park2_3_mf import cost as cost_park2_3_mf
+from synthetic.park1_3.park1_3_mf import park1_3_mf
+from synthetic.park1_3.park1_3_mf import cost as cost_park1_3_mf
+# Local
+from cp_opt_method_evaluator import CPOptMethodEvaluator
 
 # Experiment Parameters ==============================================================
-
+# We won't be changing these parameters much.
 # IS_DEBUG = True
 IS_DEBUG = False
+NUM_TRIALS = 10
+NUM_WORKERS = 1
+MAX_CAPITAL = 200
+TIME_DISTRO = 'const'
+SAVE_RESULTS_DIR = './syn_results'
 
-NOISY_EVALS = True
-# NOISY_EVALS = False
+# Choose if evals are noisy -----------------------------------------------------------
+# NOISY_EVALS = True
+NOISY_EVALS = False
 
-NUM_TRIALS = 20
-
-# STUDY_NAME = 'hartmann3_2'
-# STUDY_NAME = 'hartmann6_4'
-STUDY_NAME = 'park2_3'
-# STUDY_NAME = 'park1_3'
+# Choose experiment here --------------------------------------------------------------
 # STUDY_NAME = 'borehole_6'
+# STUDY_NAME = 'hartmann6_4'
+# STUDY_NAME = 'park1_3'
+# STUDY_NAME = 'park2_3'
 # STUDY_NAME = 'park2_4'
-# STUDY_NAME = 'syn_cnn_1'
 # STUDY_NAME = 'syn_cnn_2'
 
-# Other problem parameters - won't be changing these much
-NUM_WORKERS = 1
-MAX_NUM_EVALS = 200
-TIME_DISTRO = 'const'
-SAVE_RESULTS_DIR = 'syn_results'
-
-# METHODS = ['smac']
-# METHODS = ['rand', 'ga', 'hyperopt', 'gpyopt', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['rand', 'ga', 'dragonfly-mf', 'dragonfly']
-
-# METHODS = ['rand', 'ga']
-# METHODS = ['hyperopt']
+# Choose methods here ------------------------------------------------------------
+METHODS = ['rand', 'ga', 'dragonfly']
+# These packages need to be installed. SMAC does not work with Python2 and other packages
+# have not been tested with Python3.
 # METHODS = ['spearmint']
-# METHODS = ['dragonfly', 'smac']
-# METHODS = ['smac']
 # METHODS = ['gpyopt']
-# METHODS = ['spearmint']
-# METHODS = ['dragonfly', 'rand', 'ga']
-METHODS = ['dragonfly']
-# METHODS = ['dragonfly-mf']
-# METHODS = ['rand', 'ga', 'hyperopt']
-# METHODS = ['rand', 'ga', 'hyperopt', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['rand', 'ga', 'hyperopt', 'gpyopt', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['rand', 'ga', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['bo', 'bo_ga-direct', 'rand', 'ga']
+# METHODS = ['hyperopt']
+# METHODS = ['smac']
 
-out_dir = './syn_results'
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+
+if not os.path.exists(SAVE_RESULTS_DIR):
+    os.makedirs(SAVE_RESULTS_DIR)
 
 def get_prob_params():
   """ Returns the problem parameters. """
@@ -103,19 +89,19 @@ def get_prob_params():
   prob.time_distro = TIME_DISTRO
   prob.num_workers = NUM_WORKERS
   _study_params = {
-    'branin': ('../demos_synthetic/branin/config_mf.json',
+    'branin': ('../../../synthetic/branin/config_mf.json',
                branin_mf, cost_branin_mf, 0.1, 0, 1),
-    'hartmann3_2': ('../demos_synthetic/hartmann3_2/config_mf.json',
+    'hartmann3_2': ('../../../synthetic/hartmann3_2/config_mf.json',
                     hartmann3_2_mf, cost_hartmann3_2_mf, 0.1, 0, 1),
-    'hartmann6_4': ('../demos_synthetic/hartmann6_4/config_mf.json',
+    'hartmann6_4': ('../../../synthetic/hartmann6_4/config_mf.json',
                     hartmann6_4_mf, cost_hartmann6_4_mf, 0.1, 0, 1),
-    'borehole_6': ('../demos_synthetic/borehole_6/config_mf.json',
+    'borehole_6': ('../../../synthetic/borehole_6/config_mf.json',
                    borehole_6_mf, cost_borehole_6_mf, 1, 0, 1),
-    'park2_4': ('../demos_synthetic/park2_4/config_mf.json',
+    'park2_4': ('../../../synthetic/park2_4/config_mf.json',
                 park2_4_mf, cost_park2_4_mf, 0.3, 0, 1),
-    'park2_3': ('../demos_synthetic/park2_3/config_mf.json',
+    'park2_3': ('../../../synthetic/park2_3/config_mf.json',
                 park2_3_mf, cost_park2_3_mf, 0.1, 0, 1),
-    'park1_3': ('../demos_synthetic/park1_3/config_mf.json',
+    'park1_3': ('../../../synthetic/park1_3/config_mf.json',
                 park1_3_mf, cost_park1_3_mf, 0.5, 0, 1),
     }
   (domain_config_file, raw_func, raw_fidel_cost_func, _fc_noise_scale,
