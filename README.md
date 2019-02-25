@@ -36,7 +36,7 @@ on the maximum likelihood problem on luminous red galaxies.
 2. [`non_euclidean/run_non_euclidean_synthetic_experiments.py`](euclidean/run_non_euclidean_synthetic_experiments.py):
 Executes the synthetic experiments on non-Euclidean domains. 
 
-3.[`non_euclidean/run_non_euclidean_realtime_experiments.py`](euclidean/run_non_euclidean_realtime_experiments.py):
+3. [`non_euclidean/run_non_euclidean_realtime_experiments.py`](euclidean/run_non_euclidean_realtime_experiments.py):
 Executes the model selection and astrophysical maximum
 likelihood experiments on non-Euclidean domains. 
 

@@ -21,15 +21,13 @@ import json
 from argparse import Namespace
 from collections import OrderedDict
 import numpy as np
-
-# Local imports
+# Dragonfly imports
 from dragonfly.exd.exd_utils import get_euclidean_initial_qinfos
 from dragonfly.opt.opt_method_evaluator import OptMethodEvaluator
 from dragonfly.opt.gp_bandit import gpb_from_func_caller
 import dragonfly.opt.random_optimiser as random_optimiser
 from dragonfly.utils.doo import DOOFunction, pdoo_wrap
 from dragonfly.utils.general_utils import flatten_list_of_lists
-# local
 
 
 class EucOptMethodEvaluator(OptMethodEvaluator):
@@ -352,11 +350,6 @@ class EucOptMethodEvaluator(OptMethodEvaluator):
     total_num_queries = int(max_capital)
 
     os.system('cp -rf ' + options.exp_dir + ' ' + exp_dir)
-    # Modify experiment name in config
-#     if options.noisy:
-#       config_file = exp_dir + '/config_noisy.json'
-#     else:
-#       config_file = exp_dir + '/config.json'
     config_file = exp_dir + '/config.json'
     with open(config_file, 'r') as _file:
       config = json.load(_file, object_pairs_hook=OrderedDict)
@@ -417,33 +410,11 @@ class EucOptMethodEvaluator(OptMethodEvaluator):
       point = [point_dict[k] for k in config['variables'].keys()]
       query_vals.append(value)
       query_pts.append(point)
-#       with open(file_path, 'r') as f:
-#         result = [line.rstrip() for line in f.readlines() if 'Got result' in line \
-#                   or line[0] == '{']
-#       def _convert_result_to_float(_result):
-#         """ Converts to float. """
-#         try:
-#           return -float(_result[0].replace('Got result ', ''))
-#         except:
-#           return -np.inf
-#       query_vals.append(_convert_result_to_float(result))
-#       pts.append(re.findall(r'\[([\s0-9,.-]+)\]', result[-1]))
-# 
-#     # Formatting query points
-#     for pt in pts:
-#       fpoint = []
-#       for _pt in pt:
-#         fpoint.append([float(i) for i in _pt.split(',')])
-#       query_pts.append(fpoint)
     query_pts = [flatten_list_of_lists(x) for x in query_pts]
     query_pts = [x for x in query_pts if func_caller.raw_domain.is_a_member(x)]
-    print(query_vals)
-    print(query_pts)
-#     import pdb; pdb.set_trace()
     history.query_step_idxs = [i for i in range(total_num_queries)]
     history.query_points = [func_caller.get_normalised_domain_coords(x)
                             for x in query_pts]
-    print(history.query_points)
     history.query_send_times = [0] * total_num_queries
     history.query_receive_times = list(range(1, total_num_queries+1))
     history.query_vals = query_vals
