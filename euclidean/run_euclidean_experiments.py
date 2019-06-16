@@ -10,13 +10,13 @@ from argparse import Namespace
 from time import time, clock
 import os
 # Local
-from dragonfly.opt.gp_bandit import get_all_euc_gp_bandit_args,
+from dragonfly.opt.gp_bandit import get_all_euc_gp_bandit_args, \
                                     get_all_mf_euc_gp_bandit_args
 from dragonfly.opt.blackbox_optimiser import blackbox_opt_args
 from dragonfly.gp.euclidean_gp import euclidean_gp_args
 from euc_opt_method_evaluator import EucOptMethodEvaluator
 from lrg_func_caller import LRGOptFunctionCaller
-from dragonfly.utils.euclidean_synthetic_functions import get_syn_func_caller,
+from dragonfly.utils.euclidean_synthetic_functions import get_syn_func_caller, \
                                                           get_syn_function
 from dragonfly.utils.option_handler import load_options
 from dragonfly.utils.reporters import get_reporter
@@ -67,7 +67,8 @@ STUDY_NAME = 'branin'
 # STUDY_NAME = 'lrg'
 
 # Choose methods here ------------------------------------------------------------
-METHODS = ['rand', 'pdoo', 'dragonfly']
+# METHODS = ['rand', 'pdoo', 'dragonfly']
+METHODS = ['rand', 'pdoo'] # runs fast if you want to test quickly
 # These packages need to be installed. SMAC does not work with Python2 and other packages
 # have not been tested with Python3.
 # METHODS = ['spearmint']
