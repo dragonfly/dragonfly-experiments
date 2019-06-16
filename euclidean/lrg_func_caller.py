@@ -12,6 +12,9 @@
   b           : Galaxy Bias [1.0, 2.0]                  : 1.908
   Q_nl        : Nonlinear Correction [30.0, 31.0]       : 30.81
 
+  To run this demo you will need to download the binaries from
+  http://www.cs.cmu.edu/~kkandasa/dragonfly_datasets.html.
+
   -- kvysyara@andrew.cmu.edu
   -- kandasamy@cs.cmu.edu
 """
@@ -32,7 +35,6 @@ from dragonfly.exd.experiment_caller import EuclideanFunctionCaller
 class LRGOptFunctionCaller(EuclideanFunctionCaller):
   """ OptFunction for LRG data. """
 
-  #TODO: Implement MF version of the function caller
   def __init__(self, path, in_debug_mode=False):
     """ Function caller for LRG Data  """
     self.path = path
@@ -73,7 +75,6 @@ class LRGOptFunctionCaller(EuclideanFunctionCaller):
   def lrgLogLikl(self, evalPts):
     """ This computes the log likelihood of LRG. """
 
-#     LOWESTLOGLIKLVAL = -10000.0
     LOWESTLOGLIKLVAL = -1e17
 
     # Prelims

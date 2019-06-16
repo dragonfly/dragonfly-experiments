@@ -1,5 +1,5 @@
 """
-  Synthetic experiments for optimisation.
+  Euclidean synthetic experiments for optimisation.
   -- kandasamy@cs.cmu.edu
   -- kvysyara@andrew.cmu.edu
 """
@@ -10,12 +10,14 @@ from argparse import Namespace
 from time import time, clock
 import os
 # Local
-from dragonfly.opt.gp_bandit import get_all_euc_gp_bandit_args, get_all_mf_euc_gp_bandit_args
+from dragonfly.opt.gp_bandit import get_all_euc_gp_bandit_args,
+                                    get_all_mf_euc_gp_bandit_args
 from dragonfly.opt.blackbox_optimiser import blackbox_opt_args
 from dragonfly.gp.euclidean_gp import euclidean_gp_args
 from euc_opt_method_evaluator import EucOptMethodEvaluator
 from lrg_func_caller import LRGOptFunctionCaller
-from dragonfly.utils.euclidean_synthetic_functions import get_syn_func_caller, get_syn_function
+from dragonfly.utils.euclidean_synthetic_functions import get_syn_func_caller,
+                                                          get_syn_function
 from dragonfly.utils.option_handler import load_options
 from dragonfly.utils.reporters import get_reporter
 from dragonfly.exd.worker_manager import SyntheticWorkerManager
@@ -24,70 +26,59 @@ try:
 except ImportError:
   pass
 
-# Experiment Parameters ==================================================
-
+# We won't be changing these parameters much.
 # IS_DEBUG = True
 IS_DEBUG = False
-
-# NOISY_EVALS = True
-NOISY_EVALS = False
-
-NUM_TRIALS = 10
-
-# STUDY_NAME = 'branin'
-# STUDY_NAME = 'borehole'; NUM_TRIALS = 10;
-# STUDY_NAME = 'borehole';
-# STUDY_NAME = 'hartmann3'
-# STUDY_NAME = 'park1'; NUM_TRIALS = 10;
-STUDY_NAME = 'park2'; NUM_TRIALS = 10;
-# STUDY_NAME = 'hartmann6'; NUM_TRIALS = 10;
-# STUDY_NAME = 'hartmann6';
-# STUDY_NAME = 'park2-20'
-# STUDY_NAME = 'hartmann3-18'
-# STUDY_NAME = 'hartmann6-18'
-# STUDY_NAME = 'branin-14'; NUM_TRIALS = 10;
-# STUDY_NAME = 'hartmann6-42'; NUM_TRIALS = 10;
-# STUDY_NAME = 'branin-50'; NUM_TRIALS = 10;
-# STUDY_NAME = 'borehole-20'
-# STUDY_NAME = 'borehole-20'
-# STUDY_NAME = 'borehole-32'; NUM_TRIALS = 10;
-# STUDY_NAME = 'currin_exp'
-# STUDY_NAME = 'park2-24'
-# STUDY_NAME = 'park2-40'
-# STUDY_NAME = 'park2-24'
-# STUDY_NAME = 'borehole-96'
-# STUDY_NAME = 'park1-108'
-
-# STUDY_NAME = 'lrg'
-
-
-# We won't be changing these much.
+NUM_TRIALS = 20
 NUM_WORKERS = 1
 MAX_CAPITAL = 200
 TIME_DISTRO = 'const'
 SAVE_RESULTS_DIR = 'results'
 
-# METHODS = ['spearmint']
-# METHODS = ['spearmint']; MAX_CAPITAL = 20;
-# METHODS = ['smac']
-# METHODS = ['rand', 'pdoo', 'hyperopt', 'gpyopt', 'dragonfly']
-METHODS = ['rand', 'dragonfly']
+# Choose capital (budget) -----------------------------------------------------------
+MAX_CAPITAL = 200
+# MAX_CAPITAL = 100 # For ablation studies
 
-# METHODS = ['rand', 'hyperopt', 'gpyopt', 'dragonfly']
-# METHODS = ['rand', 'pdoo', 'gpyopt', 'hyperopt', 'ensemble-dfl', 'adaptive-ensemble-dfl']
-# METHODS = ['hyperopt', 'rand', 'pdoo', 'gpyopt', 'dragonfly', 'dragonfly-mf-se',
-#            'dragonfly-mf-exp']
-# METHODS = ['dragonfly-mf-se', 'dragonfly-mf-exp']
+# Choose if evals are noisy -----------------------------------------------------------
+# NOISY_EVALS = True
+NOISY_EVALS = False
 
-
-# STUDY_NAME = 'branin-40'
-# METHODS = ['rand', 'ml', 'post_sampling', 'ml+post_sampling']; MAX_CAPITAL = 100;
-
+# Choose experiment here --------------------------------------------------------------
+# Synthetic Experiments --------------------------------
+STUDY_NAME = 'branin'
+# STUDY_NAME = 'hartmann3'
+# STUDY_NAME = 'park1';
+# STUDY_NAME = 'park2';
+# STUDY_NAME = 'hartmann6';
+# STUDY_NAME = 'borehole';
+# STUDY_NAME = 'hartmann3-18'
+# STUDY_NAME = 'borehole-32';
+# STUDY_NAME = 'park2-40'
+# STUDY_NAME = 'branin-50';
+# STUDY_NAME = 'borehole-96'
+# STUDY_NAME = 'park1-108'
+# For ablation studies ----------------------------------
 # STUDY_NAME = 'hartmann6'
 # STUDY_NAME = 'park1-12'
 # STUDY_NAME = 'branin-40'
-# STUDY_NAME = 'hartmann-20'
-# METHODS = ['rand', 'pi', 'ts',  'ei', 'ttei', 'ucb', 'add_ucb', 'dragonfly']; MAX_CAPITAL = 100;
+# STUDY_NAME = 'borehole'
+# STUDY_NAME = 'park2-20'
+# LRG Experiment ----------------------------------------
+# STUDY_NAME = 'lrg'
+
+# Choose methods here ------------------------------------------------------------
+METHODS = ['rand', 'pdoo', 'dragonfly']
+# These packages need to be installed. SMAC does not work with Python2 and other packages
+# have not been tested with Python3.
+# METHODS = ['spearmint']
+# METHODS = ['gpyopt']
+# METHODS = ['hyperopt']
+# METHODS = ['smac']
+
+# Choose methods for ablation studies -----------------------------------------------
+# METHODS = ['rand', 'ml', 'post_sampling', 'ml+post_sampling'];
+# METHODS = ['rand', 'pi', 'ts',  'ei', 'ttei', 'ucb', 'add_ucb', 'dragonfly'];
+
 
 out_dir = './results'
 if not os.path.exists(out_dir):
@@ -139,8 +130,6 @@ def get_prob_params():
                                            noise_scale=noise_scale, fidel_dim=_fidel_dim)
     _, _, _, prob.opt_val, _, _, _ = \
               get_syn_function(STUDY_NAME, noise_type=noise_type, noise_scale=noise_scale)
-#   prob.func_to_min = lambda x: -1 * func_to_max(x)
-#   prob.func_to_max = func_to_max
   prob.worker_manager = SyntheticWorkerManager(prob.num_workers,
                                                time_distro='caller_eval_cost')
   prob.save_file_prefix = prob.study_name + ('-debug' if IS_DEBUG else '')
@@ -162,8 +151,6 @@ def get_method_options(prob, capital_type):
     # wrap up
     curr_options = load_options(blackbox_opt_args)
     if meth in ['hyperopt', 'smac', 'gpyopt', 'pdoo']:
-#       curr_options.func_to_max = prob.func_to_max
-#       curr_options.func_to_min = prob.func_to_min
       curr_options.redo_evals_for_true_val = True
       if meth == 'hyperopt':
         curr_options.algo = tpe.suggest
@@ -176,6 +163,7 @@ def get_method_options(prob, capital_type):
                                           'Spearmint/' + prob.study_name.split('-')[0])
       print(curr_options.exp_dir)
       curr_options.pkg_dir = '/zfsauton3/home/kkandasa/projects/Boss/Spearmint/spearmint'
+      curr_options.pkg_dir = 'Insert-location-of-spearmint-dir-here'
     elif meth.startswith('dragonfly-mf'):
       euc_mf_gpb_args = get_all_mf_euc_gp_bandit_args()
       curr_options = load_options(euc_mf_gpb_args)
@@ -221,3 +209,4 @@ def main():
 
 if __name__ == '__main__':
   main()
+

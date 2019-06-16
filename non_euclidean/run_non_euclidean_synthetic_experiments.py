@@ -6,88 +6,77 @@
 # pylint: disable=no-member
 
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from argparse import Namespace
 from time import time, clock
 
-# Local demo functions
-from demos_synthetic.borehole_6.borehole_6_mf import borehole_6_mf
-from demos_synthetic.borehole_6.borehole_6_mf import cost as cost_borehole_6_mf
-from demos_synthetic.branin.branin_mf import branin_mf
-from demos_synthetic.branin.branin_mf import cost as cost_branin_mf
-from demos_synthetic.hartmann3_2.hartmann3_2_mf import hartmann3_2_mf
-from demos_synthetic.hartmann3_2.hartmann3_2_mf import cost as cost_hartmann3_2_mf
-from demos_synthetic.hartmann6_4.hartmann6_4_mf import hartmann6_4_mf
-from demos_synthetic.hartmann6_4.hartmann6_4_mf import cost as cost_hartmann6_4_mf
-from demos_synthetic.park2_4.park2_4_mf import park2_4_mf
-from demos_synthetic.park2_4.park2_4_mf import cost as cost_park2_4_mf
-from demos_synthetic.park2_3.park2_3_mf import park2_3_mf
-from demos_synthetic.park2_3.park2_3_mf import cost as cost_park2_3_mf
-from demos_synthetic.park1_3.park1_3_mf import park1_3_mf
-from demos_synthetic.park1_3.park1_3_mf import cost as cost_park1_3_mf
+# Add the path to the dragonfly/experiments directory here
+DRAGONFLY_EXPERIMENTS_DIR = '/Users/kkandasa/projects/Boss/dragonfly/examples'
+sys.path.append(DRAGONFLY_EXPERIMENTS_DIR)
 
-# Local
-from cp_opt_method_evaluator import CPOptMethodEvaluator
+# Dragonfly imports
 from dragonfly.exd.cp_domain_utils import load_config_file
 from dragonfly.exd.experiment_caller import get_multifunction_caller_from_config
 from dragonfly.exd.worker_manager import SyntheticWorkerManager
 from dragonfly.opt.blackbox_optimiser import blackbox_opt_args
 from dragonfly.opt.cp_ga_optimiser import cpga_opt_args
-from dragonfly.opt.gp_bandit import get_all_cp_gp_bandit_args, get_all_mf_cp_gp_bandit_args
+from dragonfly.opt.gp_bandit import get_all_cp_gp_bandit_args, \
+                                    get_all_mf_cp_gp_bandit_args
 from dragonfly.opt.random_optimiser import cp_random_optimiser_args
 from dragonfly.utils.option_handler import load_options
 from dragonfly.utils.reporters import get_reporter
-
+# Examples from dragonfly/examples
+from synthetic.borehole_6.borehole_6_mf import borehole_6_mf
+from synthetic.borehole_6.borehole_6_mf import cost as cost_borehole_6_mf
+from synthetic.branin.branin_mf import branin_mf
+from synthetic.branin.branin_mf import cost as cost_branin_mf
+from synthetic.hartmann3_2.hartmann3_2_mf import hartmann3_2_mf
+from synthetic.hartmann3_2.hartmann3_2_mf import cost as cost_hartmann3_2_mf
+from synthetic.hartmann6_4.hartmann6_4_mf import hartmann6_4_mf
+from synthetic.hartmann6_4.hartmann6_4_mf import cost as cost_hartmann6_4_mf
+from synthetic.park2_4.park2_4_mf import park2_4_mf
+from synthetic.park2_4.park2_4_mf import cost as cost_park2_4_mf
+from synthetic.park2_3.park2_3_mf import park2_3_mf
+from synthetic.park2_3.park2_3_mf import cost as cost_park2_3_mf
+from synthetic.park1_3.park1_3_mf import park1_3_mf
+from synthetic.park1_3.park1_3_mf import cost as cost_park1_3_mf
+# Local
+from cp_opt_method_evaluator import CPOptMethodEvaluator
 
 # Experiment Parameters ==============================================================
-
+# We won't be changing these parameters much.
 # IS_DEBUG = True
 IS_DEBUG = False
-
-NOISY_EVALS = True
-# NOISY_EVALS = False
-
-NUM_TRIALS = 20
-
-# STUDY_NAME = 'hartmann3_2'
-# STUDY_NAME = 'hartmann6_4'
-STUDY_NAME = 'park2_3'
-# STUDY_NAME = 'park1_3'
-# STUDY_NAME = 'borehole_6'
-# STUDY_NAME = 'park2_4'
-# STUDY_NAME = 'syn_cnn_1'
-# STUDY_NAME = 'syn_cnn_2'
-
-# Other problem parameters - won't be changing these much
+NUM_TRIALS = 10
 NUM_WORKERS = 1
-MAX_NUM_EVALS = 200
+MAX_CAPITAL = 200
 TIME_DISTRO = 'const'
 SAVE_RESULTS_DIR = 'syn_results'
 
-# METHODS = ['smac']
-# METHODS = ['rand', 'ga', 'hyperopt', 'gpyopt', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['rand', 'ga', 'dragonfly-mf', 'dragonfly']
+# Choose if evals are noisy -----------------------------------------------------------
+# NOISY_EVALS = True
+NOISY_EVALS = False
 
-# METHODS = ['rand', 'ga']
-# METHODS = ['hyperopt']
+# Choose experiment here --------------------------------------------------------------
+STUDY_NAME = 'borehole_6'
+# STUDY_NAME = 'hartmann6_4'
+# STUDY_NAME = 'park1_3'
+# STUDY_NAME = 'park2_3'
+# STUDY_NAME = 'park2_4'
+# STUDY_NAME = 'syn_cnn_2'
+
+# Choose methods here ------------------------------------------------------------
+# METHODS = ['rand', 'ga', 'dragonfly']
+METHODS = ['rand', 'ga'] # this runs very fast if you want to test quickly
+# These packages need to be installed. SMAC does not work with Python2 and other packages
+# have not been tested with Python3.
 # METHODS = ['spearmint']
-# METHODS = ['dragonfly', 'smac']
-# METHODS = ['smac']
 # METHODS = ['gpyopt']
-# METHODS = ['spearmint']
-# METHODS = ['dragonfly', 'rand', 'ga']
-METHODS = ['dragonfly']
-# METHODS = ['dragonfly-mf']
-# METHODS = ['rand', 'ga', 'hyperopt']
-# METHODS = ['rand', 'ga', 'hyperopt', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['rand', 'ga', 'hyperopt', 'gpyopt', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['rand', 'ga', 'dragonfly-mf', 'dragonfly']
-# METHODS = ['bo', 'bo_ga-direct', 'rand', 'ga']
+# METHODS = ['hyperopt']
+# METHODS = ['smac']
 
-out_dir = './syn_results'
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+
+if not os.path.exists(SAVE_RESULTS_DIR):
+    os.makedirs(SAVE_RESULTS_DIR)
 
 def get_prob_params():
   """ Returns the problem parameters. """
@@ -95,31 +84,32 @@ def get_prob_params():
   prob.study_name = STUDY_NAME
   if IS_DEBUG:
     prob.num_trials = 3
-    prob.max_num_evals = 10
+    prob.max_capital = 10
   else:
     prob.num_trials = NUM_TRIALS
-    prob.max_num_evals = MAX_NUM_EVALS
+    prob.max_capital = MAX_CAPITAL
   # Common
   prob.time_distro = TIME_DISTRO
   prob.num_workers = NUM_WORKERS
   _study_params = {
-    'branin': ('../demos_synthetic/branin/config_mf.json',
+    'branin': ('synthetic/branin/config_mf.json',
                branin_mf, cost_branin_mf, 0.1, 0, 1),
-    'hartmann3_2': ('../demos_synthetic/hartmann3_2/config_mf.json',
+    'hartmann3_2': ('synthetic/hartmann3_2/config_mf.json',
                     hartmann3_2_mf, cost_hartmann3_2_mf, 0.1, 0, 1),
-    'hartmann6_4': ('../demos_synthetic/hartmann6_4/config_mf.json',
+    'hartmann6_4': ('synthetic/hartmann6_4/config_mf.json',
                     hartmann6_4_mf, cost_hartmann6_4_mf, 0.1, 0, 1),
-    'borehole_6': ('../demos_synthetic/borehole_6/config_mf.json',
+    'borehole_6': ('synthetic/borehole_6/config_mf.json',
                    borehole_6_mf, cost_borehole_6_mf, 1, 0, 1),
-    'park2_4': ('../demos_synthetic/park2_4/config_mf.json',
+    'park2_4': ('synthetic/park2_4/config_mf.json',
                 park2_4_mf, cost_park2_4_mf, 0.3, 0, 1),
-    'park2_3': ('../demos_synthetic/park2_3/config_mf.json',
+    'park2_3': ('synthetic/park2_3/config_mf.json',
                 park2_3_mf, cost_park2_3_mf, 0.1, 0, 1),
-    'park1_3': ('../demos_synthetic/park1_3/config_mf.json',
+    'park1_3': ('synthetic/park1_3/config_mf.json',
                 park1_3_mf, cost_park1_3_mf, 0.5, 0, 1),
     }
-  (domain_config_file, raw_func, raw_fidel_cost_func, _fc_noise_scale,
+  (domain_config_file_suffix, raw_func, raw_fidel_cost_func, _fc_noise_scale,
    _initial_pool_size, _) = _study_params[prob.study_name]
+  domain_config_file = os.path.join(DRAGONFLY_EXPERIMENTS_DIR, domain_config_file_suffix)
   # noisy
   prob.noisy_evals = NOISY_EVALS
   if NOISY_EVALS:
@@ -135,10 +125,10 @@ def get_prob_params():
                   noise_scale=noise_scale)
   # Set max_capital
   if hasattr(func_caller, 'fidel_cost_func'):
-    prob.max_capital = prob.max_num_evals * \
+    prob.max_capital = prob.max_capital * \
                        func_caller.fidel_cost_func(func_caller.fidel_to_opt)
   else:
-    prob.max_capital = prob.max_num_evals
+    prob.max_capital = prob.max_capital
   # Store everything in prob
   prob.func_caller = func_caller
   prob.worker_manager = SyntheticWorkerManager(prob.num_workers,
@@ -175,15 +165,12 @@ def get_method_options(prob, capital_type):
       curr_options = Namespace(redo_evals_for_true_val=True)
     else:
       raise ValueError('Unknown method %s.'%(meth))
-
+    # Some additional data we will need for Spearmint
     if meth == 'spearmint':
-#       curr_options.exp_dir = '/home/karun/boss/e3_cp/Spearmint/' + \
-#                              prob.study_name.split('-')[0]
-#       curr_options.pkg_dir = '/home/karun/Spearmint/spearmint'  
-      curr_options.exp_dir = '/zfsauton3/home/kkandasa/projects/Boss/boss/e3_cp/Spearmint/' + \
+      # Swap in the following after you download and install Spearmint
+      curr_options.exp_dir = '/home/karun/boss/e3_cp/Spearmint/' + \
                              prob.study_name.split('-')[0]
-      curr_options.pkg_dir = '~/projects/Boss/Spearmint/spearmint'
-      curr_options.pkg_dir = '/zfsauton3/home/kkandasa/projects/Boss/Spearmint/spearmint'
+      curr_options.pkg_dir = '/home/karun/Spearmint/spearmint'  
     curr_options.capital_type = capital_type
     all_method_options[meth] = curr_options
   return all_method_options

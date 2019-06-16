@@ -1,34 +1,42 @@
 ## Dragonfly Experiments
 
-** Clone dragonfly-experiments repository **
+
+To get started, first follow the instructions in the
+[Dragonfly repository](dragonfly.github.io)
+to insall Dragonfly.
+
+Then, clone this repository.
 ```bash
 $ git clone https://github.com/dragonfly/dragonfly-experiments.git
 ```
 
-** Install dragonfly in Python Virtual Environment:**
-Dragonfly can be pip installed in a python virtualenv, by following the steps below.
-```bash
-$ virtualenv env        # Python2
-$ source env/bin/activate
-(env)$ pip install numpy
-(env)$ pip install scikit-learn scipy matplotlib
-(env)$ pip install git+https://github.com/dragonfly/dragonfly.git
-```
 
-### Euclidean Domain Synthetic Experiments
+
+&nbsp;
+
+
+This repository provides three Python scripts to run experiments.
+
+1. [`euclidean/run_euclidean_experiments.py`](euclidean/run_euclidean_experiments.py):
+Executes the experiments on Euclidean domains. This include the synthetic experiments
+on the maximum likelihood problem on luminous red galaxies.
+
+2. [`non_euclidean/run_non_euclidean_synthetic_experiments.py`](euclidean/run_non_euclidean_synthetic_experiments.py):
+Executes the synthetic experiments on non-Euclidean domains. 
+
+3. [`non_euclidean/run_non_euclidean_realtime_experiments.py`](euclidean/run_non_euclidean_realtime_experiments.py):
+Executes the model selection and astrophysical maximum
+likelihood experiments on non-Euclidean domains. 
+
+The experiments use the examples in the
+[dragonfly/examples](https://github.com/dragonfly/dragonfly/tree/master/examples)
+directory. You need to specify the path to this directory via the
+`DRAGONFLY_EXPERIMENTS_DIR` variable at the beginning of each script.
+
+To run these experiments, simply `cd` into the relevant directory and execute the
+script. For example, the second script above can be run via the following commands.
+You may select the specific experiment in the script.
 ```bash
 (env)$ cd dragonfly-experiments/euclidean
-(env)$ python e1_synthetic_bo_packages.py
-```
-
-### Non Euclidean Domain Synthetic Experiments
-```bash
-(env)$ cd dragonfly-experiments/non_euclidean
-(env)$ python e3_mf_synthetic.py
-```
-
-### Non Euclidean Domain Real Experiments
-```bash
-(env)$ cd dragonfly-experiments/non_euclidean
-(env)$ python e3_mf_real.py
+(env)$ python run_non_euclidean_synthetic_experiments.py
 ```
