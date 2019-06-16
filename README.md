@@ -40,3 +40,11 @@ You may select the specific experiment in the script.
 (env)$ cd dragonfly-experiments/euclidean
 (env)$ python run_non_euclidean_synthetic_experiments.py
 ```
+
+Once the experiment is done, you may use
+[plotting.py](plotting.py) to plot the results.
+```bash
+(env)$ python plotting.py --file non_eucildean/syn_results/<file_name>.mat
+```
+
+
